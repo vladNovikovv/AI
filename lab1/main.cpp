@@ -1,6 +1,6 @@
 #include "Tree.h"
 
-#define FIRST
+//#define FIRST
 
 int main() {
     Tree treeDfs, treeStart, treeGoal;
