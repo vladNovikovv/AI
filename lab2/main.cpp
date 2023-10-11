@@ -1,7 +1,7 @@
 #include "Tree.h"
 
 //#define FIRST
-
+//ok
 int main() {
     Tree treeDfsH1, treeDfsH2, treeStartH1, treeStartH2, treeGoalH1, treeGoalH2;
 
