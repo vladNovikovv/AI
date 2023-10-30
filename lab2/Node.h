@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <unordered_set>
+#include <string>
 
 typedef std::vector<std::vector<int>> vector;
 
@@ -35,7 +36,7 @@ public:
     void setGPrice(int gPrice);
 
 private:
-    void makeChild (int zeroI, int zeroJ, int iDiff, int jDiff, std::unordered_set<Node, Node::HashFunction>& usedNodes);
+    void makeChild (int zeroI, int zeroJ, int iDiff, int jDiff);
 
 public:
     static bool isUsed(const Node& node, std::unordered_set<Node, Node::HashFunction>& usedNodes);
@@ -49,7 +50,7 @@ public:
     explicit Node(const vector& v);
     bool operator == (const Node& node) const;
     Node& operator = (const Node& node);
-    std::vector<Node*>& makeChilds(std::unordered_set<Node, Node::HashFunction>& usedNodes);
+    std::vector<Node*>& makeChilds(/*std::unordered_set<Node, Node::HashFunction>& usedNodes*/);
     std::vector<Node*> getChilds();
     friend std::ostream& operator << (std::ostream& os, const Node& node);
 

@@ -1,6 +1,7 @@
 #include "Tree.h"
 
-#define STEP_BY_STEP
+//#define STEP_BY_STEP
+//#define A_STAR
 
 Tree::Tree() :
     nodeFound(false)
@@ -33,220 +34,9 @@ void Tree::setEndNode(vector &&endState)
     this->endNode = new Node(endState);
 }
 
-void Tree::dfs(Node* node, bool h1_h2) {
-    if (nodeFound) {
-        return;
-    }
-    stepCount++;
-    auto& childs = node->makeChilds(usedNodes);
-    if (childs.size() == 1) {
-        h1(childs.at(0));
-        h2(childs.at(0));
-    }
-    std::sort(childs.begin(), childs.end(), [&](Node* l, Node* r){
-        return g(l) + (h1_h2 ? h1(l) : h2(l)) < g(r) + (h1_h2 ? h1(r) : h2(r));
-    });
-#ifdef STEP_BY_STEP
-    if(!nodeFound) {
-        std::cout << "Current node isn't goal" << std::endl;
-    }
-    showParentInfo(*node, true, h1_h2);
-#endif
-    for (auto child : node->getChilds()) {
-        if (*child == *endNode) {
-            std::cout << "FIND!\n";
-            std::cout << *child << "\n";
-            nodeFound = true;
-            capacity = usedNodes.size();
-            break;
-        }
-        dfs(child, h1_h2);
-    }
-}
-
 Tree::~Tree() {
     delete root;
     delete endNode;
-}
-
-void Tree::findPath(Node &curNode, Tree& tree, bool order) {
-    std::stack<Node> stack;
-    Node tmpNode = *(tree.usedNodes.find(curNode));
-    while(!(tmpNode == *(tree.root))){
-        tmpNode = *(tmpNode.getParent());
-        stack.push(tmpNode);
-        // Прямой вывод
-        if(order){
-            std::cout << tmpNode;
-        }
-    }
-    // Обратный вывод
-    if(!order){
-        while(!stack.empty()){
-            std::cout << stack.top();
-            stack.pop();
-        }
-    }
-}
-
-void Tree::bds(Tree &start, Tree &goal, bool h1_h2) {
-    if (*start.root == *goal.root) {
-        return;
-    }
-    std::vector<Node*> startNodes, goalNodes, temp;
-    startNodes.push_back(start.root);
-    goalNodes.push_back(goal.root);
-    while(true) {
-        if (startNodes.size() == 1) {
-            start.h1(startNodes.at(0));
-            start.h2(startNodes.at(0));
-        }else{
-            std::sort(startNodes.begin(), startNodes.end(), [&](Node* l, Node* r){
-                return start.g(l) + (h1_h2 ? start.h1(l) : start.h2(l)) < start.g(r) + (h1_h2 ? start.h1(r) : start.h2(r));
-            });
-        }
-        for (auto curNode : startNodes) {
-            start.stepCount++;
-            if (goal.usedNodes.find(*curNode) != goal.usedNodes.end()) {
-                std::cout << "Path: " << std::endl;
-                findPath(*curNode, start, false);
-                std::cout << "FIND = " << *curNode;
-                findPath(*curNode, goal, true);
-                start.capacity = start.usedNodes.size();
-                goal.capacity = goal.usedNodes.size();
-                return ;
-            } else {
-                for(auto curNodeChild: curNode->makeChilds(start.usedNodes)){
-                    temp.push_back(curNodeChild);
-                }
-            }
-#ifdef STEP_BY_STEP
-            std::cout << "--------------------START TREE--------------------------" << std::endl;
-            auto it = std::find(startNodes.begin(), startNodes.end(), curNode)+1;
-            if (it == startNodes.end()) {
-                std::cout << "There is no nodes for unpacking" << std::endl;
-            } else {
-                std::cout << "Nodes for unpacking: " << std::endl;
-                for (int j = 0; j < curNode->getMat().size(); ++j) {
-                    for (auto it_1=it; it_1 < startNodes.end(); ++it_1) {
-                        std::cout << ((*it_1)->getMat())[j] << " ";
-                    }
-                    std::cout << "\n";
-                }
-
-                std::cout << " ";
-                for (auto it_1=it; it_1 < startNodes.end(); ++it_1) {
-                    printf("g = %-3d   ", (*it_1)->getGPrice());
-                }
-                std::cout << "\n ";
-                for (auto it_1=it; it_1 < startNodes.end(); ++it_1) {
-                    h1_h2 ? printf("h1 = %-2d   ", (*it_1)->getH1Price()) : printf("h2 = %-2d   ", (*it_1)->getH2Price());
-                }
-                std::cout << "\n ";
-            }
-            std::cout << "Current node isn't goal" << std::endl;
-            showParentInfo(*curNode, false, false);
-#endif
-        }
-        startNodes = temp;
-        temp.clear();
-
-        if (goalNodes.size() == 1) {
-            goal.h1(goalNodes.at(0));
-            goal.h2(goalNodes.at(0));
-        } else {
-            std::sort(goalNodes.begin(), goalNodes.end(), [&](Node* l, Node* r){
-                return goal.g(l) + (h1_h2 ? goal.h1(l) : goal.h2(l)) < goal.g(r) + (h1_h2 ? goal.h1(r) : goal.h2(r));
-            });
-        }
-        for (auto curNode : goalNodes) {
-            goal.stepCount++;
-            if (start.usedNodes.find(*curNode) != start.usedNodes.end()) {
-                std::cout << "Path: " << std::endl;
-                findPath(*curNode, start, false);
-                std::cout << "FIND = \n" << *curNode;
-                findPath(*curNode, goal, true);
-                goal.capacity = goal.usedNodes.size();
-                start.capacity = start.usedNodes.size();
-                return;
-            } else {
-                for (auto curNodeChild: curNode->makeChilds(goal.usedNodes)) {
-                    temp.push_back(curNodeChild);
-                }
-            }
-#ifdef STEP_BY_STEP
-            std::cout << "--------------------GOAL TREE---------------------------" << std::endl;
-
-            auto it = std::find(goalNodes.begin(), goalNodes.end(), curNode)+1;
-            if (it == goalNodes.end()) {
-                std::cout << "There is no nodes for unpacking" << std::endl;
-            } else {
-                std::cout << "Nodes for unpacking: " << std::endl;
-                for (int j = 0; j < curNode->getMat().size(); ++j) {
-                    for (auto it_1=it; it_1 < goalNodes.end(); ++it_1) {
-                        std::cout << ((*it_1)->getMat())[j] << " ";
-                    }
-                    std::cout << "\n";
-                }
-
-                std::cout << " ";
-                for (auto it_1=it; it_1 < startNodes.end(); ++it_1) {
-                    printf("g = %-3d   ", (*it_1)->getGPrice());
-                }
-                std::cout << "\n ";
-                for (auto it_1=it; it_1 < startNodes.end(); ++it_1) {
-                    h1_h2 ? printf("h1 = %-2d   ", (*it_1)->getH1Price()) : printf("h2 = %-2d   ", (*it_1)->getH2Price());
-                }
-                std::cout << "\n ";
-            }
-            std::cout << "Current node isn't goal" << std::endl;
-            showParentInfo(*curNode, false, false);
-#endif
-        }
-        goalNodes = temp;
-        temp.clear();
-    }
-}
-
-void Tree::showParentInfo(Node& parent, bool firstStrategy, bool h1_h2){
-    std::cout << "Current node:\n" << parent;
-    auto childs = parent.getChilds();
-    if (childs.empty()) {
-        std::cout << "Node hasn't childs" << std::endl;
-    } else {
-        std::cout << "New appended nodes:\n";
-        for (int j = 0; j < childs[0]->getMat().size(); ++j) {
-            for (auto &child: childs) {
-                std::cout << (child->getMat())[j] << " ";
-            }
-            std::cout << "\n";
-        }
-        if (firstStrategy) {
-            std::cout << " ";
-            for (auto &child: childs) {
-                printf("g = %-3d   ", child->getGPrice());
-            }
-            std::cout << "\n ";
-            for (auto &child: childs) {
-                h1_h2 ? printf("h1 = %-2d   ", child->getH1Price()) : printf("h2 = %2d   ", child->getH2Price());
-            }
-        }
-        std::cout << "\n";
-    }
-    if (parent.duplicatedNodes.empty()) {
-        std::cout << "Node hasn't duplicated childs" << std::endl;
-    } else {
-        std::cout << "Duplicated nodes:\n";
-        for (int j = 0; j < parent.duplicatedNodes[0].getMat().size(); ++j) {
-            for (auto & duplicate : parent.duplicatedNodes) {
-                std::cout << (duplicate.getMat())[j] << " ";
-            }
-            std::cout << "\n";
-        }
-    }
-
-    std::cout << std::endl;
-    std::cin.get();
 }
 
 int Tree::getStepCount() const {
@@ -296,5 +86,116 @@ int Tree::h2(Node *node) {
 
 int Tree::g(Node *node) {
     return node->getGPrice();
+}
+
+void Tree::aStar(bool h1_h2, Node& node) {
+#ifdef STEP_BY_STEP
+    if(!map.empty()) {
+        std::cout << "Nodes for unpacking: " << std::endl;
+        for (int j = 0; j < map.begin()->second.first.getMat().size(); ++j) {
+            for (auto element: map) {
+                if(!element.second.second) {
+                    std::cout << ((element.second.first).getMat())[j] << " ";
+                }
+            }
+            std::cout << "\n";
+        }
+
+        std::cout << " ";
+        for (auto element: map) {
+            if(!element.second.second) {
+                printf("g = %-3d   ", (element.second.first).getGPrice());
+            }
+        }
+        std::cout << "\n ";
+        for (auto element: map) {
+            if(!element.second.second) {
+                h1_h2 ? printf("h1 = %-2d   ", (element.second.first).getH1Price()) : printf("h2 = %-2d   ", (element.second.first).getH2Price());
+            }
+        }
+        std::cout << "\n ";
+    }
+    std::cout << "Current node: " << std::endl;
+    std::cout << node;
+    printf(" g = %-3d   \n", (node).getGPrice());
+    h1_h2 ? printf(" h1 = %-2d   ", (node).getH1Price()) : printf(" h2 = %-2d   ", (node).getH2Price());
+#endif
+
+    if(node == *endNode){
+        std::cout << "Found node: \n" << node << "\n";
+        std::cout << "Depth = " << node.getDepth() << "\n";
+        nodeFound = true;
+        return;
+    }
+    if(nodeFound) return;
+
+#ifdef STEP_BY_STEP
+    std::cout << "\nNode is not goal" << std::endl;
+#endif
+
+    if(node == *root)
+    {
+        addToMap(node, h1_h2);
+    }
+    stepCount++;
+    auto& childs = node.makeChilds();
+
+#ifdef STEP_BY_STEP
+    std::cout << "\nChilds: " << std::endl;
+    for (int j = 0; j < node.getMat().size(); ++j) {
+        for (auto child : childs) {
+            std::cout << (child->getMat())[j] << " ";
+        }
+        std::cout << "\n";
+    }
+#endif
+
+    for (Node *child: childs) {
+        addToMap(*child, h1_h2);
+    }
+    std::pair<const int, std::pair<Node, bool>> newNode = {f(node, h1_h2), {node, false}};
+    std::find_if(
+            map.begin(),
+            map.end(),
+            [newNode](const auto& mapObject)
+            { return mapObject.second.first == newNode.second.first; })->second.second = true;
+
+#ifdef STEP_BY_STEP
+    std::cout << std::endl;
+    std::cin.get();
+#endif
+
+    for(auto &curNode: map){
+        if(!curNode.second.second){
+            aStar(h1_h2, curNode.second.first);
+            break;
+        }
+    }
+
+}
+
+void Tree::addToMap(Node &node, bool h1_h2) {
+    capacity++;
+    std::pair<const int, std::pair<Node, bool>> newNode = {f(node, h1_h2), {node, false}};
+    auto it = std::find_if(
+            map.begin(),
+            map.end(),
+            [node](const auto& mapObject) { return mapObject.second.first == node; });
+    if(it != map.end()){
+        if (it->second.first.getGPrice() > node.getGPrice()){
+            map.erase(it);
+            map.insert(newNode);
+        }
+    } else{
+        map.insert(newNode);
+    }
+}
+
+int Tree::f(Node &node, bool h1_h2) {
+    return
+#ifdef A_STAR
+node.getGPrice() +
+#endif
+    (h1_h2 ? h1(&node) : h2(&node));
 }
 

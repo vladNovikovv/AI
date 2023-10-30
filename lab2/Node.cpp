@@ -21,7 +21,7 @@ Node& Node::operator=(const Node &node) {
     return *this;
 }
 
-std::vector<Node *>& Node::makeChilds(std::unordered_set<Node, Node::HashFunction>& usedNodes) {
+std::vector<Node *>& Node::makeChilds() {
     int zeroI, zeroJ;
     for (int i = 0; i < mat.size(); ++i) {
         for (int j = 0; j < mat.size(); ++j) {
@@ -34,43 +34,33 @@ std::vector<Node *>& Node::makeChilds(std::unordered_set<Node, Node::HashFunctio
     }
 
     if (zeroI != 0) { // двигаем верхнюю вниз
-        makeChild(zeroI, zeroJ, -1, 0, usedNodes);
+        makeChild(zeroI, zeroJ, -1, 0);
     }
     if (zeroI != mat.size() - 1) { // двигаем нижнюю вверх
-        makeChild(zeroI, zeroJ, 1, 0, usedNodes);
+        makeChild(zeroI, zeroJ, 1, 0);
     }
     if (zeroJ != 0) { // двигаем левую вправо
-        makeChild(zeroI, zeroJ, 0, -1, usedNodes);
+        makeChild(zeroI, zeroJ, 0, -1);
     }
     if (zeroJ != mat.size() - 1) { // двигаем правую влево
-        makeChild(zeroI, zeroJ, 0, 1, usedNodes);
+        makeChild(zeroI, zeroJ, 0, 1);
     }
     return childs;
 }
 
-void Node::makeChild (int zeroI, int zeroJ, int iDiff, int jDiff, std::unordered_set<Node, Node::HashFunction>& usedNodes) {
+void Node::makeChild (int zeroI, int zeroJ, int iDiff, int jDiff) {
     vector newMat = mat;
     int valueForSwap = newMat[zeroI + iDiff][zeroJ + jDiff];
     std::swap(newMat[zeroI][zeroJ], newMat[zeroI + iDiff][zeroJ + jDiff]);
     Node *newNode = new Node(newMat);
-    if (isUsed(*newNode, usedNodes)) {
-        duplicatedNodes.push_back(*newNode);
-        delete newNode;
-        return;
-    } //
 
-    newNode->parent = this;
     newNode->depth = depth + 1;
-    newNode->gPrice = gPrice + valueForSwap;
-    usedNodes.insert(*newNode);
+    newNode->gPrice = depth + 1;
+
     childs.push_back(newNode);
 }
 
-Node::~Node() {
-    for (auto child : childs) {
-        delete child;
-    }
-}
+Node::~Node() { }
 
 int Node::getDepth() const {
     return depth;
@@ -88,7 +78,7 @@ std::ostream &operator<<(std::ostream &os, const Node &node) {
     for (auto &m: node.mat) {
         os << m << "\n";
     }
-    os << "\n";
+//    os << "\n";
     return os;
 }
 

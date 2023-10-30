@@ -3,6 +3,7 @@
 #include <queue>
 #include <stack>
 #include <algorithm>
+#include <map>
 
 class Tree {
 private:
@@ -10,11 +11,15 @@ private:
     Node* endNode;
     bool nodeFound;
     std::unordered_set<Node, Node::HashFunction> usedNodes;
+    std::multimap<int, std::pair<Node, bool>> map;
 
     int stepCount;
     size_t capacity;
 public:
     Tree();
+
+    void aStar(bool h1_h2, Node& node);
+    void addToMap(Node& node, bool h1_h2);
 
     Node* getStartNode();
     void setStartNode(vector&& startState);
@@ -26,14 +31,9 @@ public:
     int h1(Node* node);
     int h2(Node* node);
     int g(Node* node);
-
-    void dfs(Node* node, bool h1_h2);
+    int f(Node& node, bool h1_h2);
 
     ~Tree();
-
-    static void bds(Tree& start, Tree& goal, bool h1_h2);
-    static void findPath(Node &curNode, Tree& tree, bool order);
-    static void showParentInfo(Node& parent, bool firstStrategy, bool h1_h2);
 };
 
 
